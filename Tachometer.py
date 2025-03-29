@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from Lib.Graphics.AnalogGauge import AnalogGauge
+from .Lib.Graphics.AnalogGauge import AnalogGauge
 
 class Tachometer:
     def __init__(self, image: np.ndarray, type="analog", MaxValue=6000):
