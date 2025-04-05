@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from .Lib.Graphics.AnalogGauge import AnalogGauge
+from Lib.Graphics.AnalogGauge import AnalogGauge
 
 class Tachometer:
     def __init__(self, image: np.ndarray, type="analog", MaxValue=6000):
@@ -27,7 +27,8 @@ class Tachometer:
                 units='RPM',
                 arch=180,
                 phase=180)
-            self.Tachometer.needle_position_range = self.current_RPM
+            self.Tachometer.SetValue(self.current_RPM)
+            self.Tachometer.update_display()
 
     
     def draw(self):
@@ -37,9 +38,9 @@ class Tachometer:
         Returns:
             np.ndarray: The updated base image with the tachometer overlayed.
         """
-        # Draw the tachometer gauge
-        return self.Tachometer.update_display()
-    
+        self.speed_gauge.update_display()
+
+
     def set_RPM(self, RPM):
         """
         Updates the RPM value.
@@ -49,28 +50,70 @@ class Tachometer:
         """
         if( self.current_RPM != RPM):
             self.current_RPM = RPM
-
-        self.Tachometer.needle_position_range = RPM
+            self.Tachometer.SetValue(RPM)
+            self.Tachometer.update_display()
     
     
 if __name__ == "__main__":
         # Define the size of the main window
-        window_width = 800
-        window_height = 600
-
-        # Create a blank image for the main window
-        main_window_image = np.zeros((window_height, window_width, 3), dtype=np.uint8)
-
+        imagename = 'tachometer'
+        window_size = (500, 800, 3)
+        MaxRPM = 6000
+        MinRPM = 0
+        RPM = 0
+        imagecontainer = np.zeros(window_size, dtype=np.uint8)
+        imagecontainer[:,:] = (0, 0, 0)  # Set the background color to black
         # Create an instance of the Tachometer class
-        tachometer = Tachometer(main_window_image, type="analog", MaxValue=6000)
+        tachometer = Tachometer(image=imagecontainer, type="analog", MaxValue=MaxRPM)
+        # Create window image
+        cv2.namedWindow(imagename)
+        cv2.imshow(imagename, imagecontainer)
+        
+        while True:
+            # Display the updated image in the window
+            # #cv2.imshow(imagename, imagecontainer)
+            # Wait for a key press
+            # 0xFF is used to mask the key value to get the last 8 bits
+            key = cv2.waitKey(1) & 0xFF
 
-        # Set the RPM value
-        tachometer.set_RPM(3000)
+            #exit if 'q' is pressed
+            if key == ord('q'):
+                break
+            
+            if key == ord('a'):
+                # Set the RPM value to 0
+                RPM = int(0)
+        
+            if key == ord('b'):
+                # Set the RPM value to 25% of MaxRPM
+                RPM = int((MaxRPM * 0.25))
 
-        # Draw the tachometer on the main window image
-        updated_image = tachometer.draw()
-
-        # Display the updated image in a window
-        cv2.imshow("Tachometer", updated_image)
-        cv2.waitKey(0)
+            if key == ord('c'):
+                # Set the RPM value to 50% of MaxRPM
+                RPM = int((MaxRPM * 0.50))
+            
+            if key == ord('d'):
+                # Set the RPM value to 75% of MaxRPM
+                RPM = int((MaxRPM * 0.75))
+            
+            if key == ord('e'):
+                # Set the RPM value to 100% of MaxRPM
+                RPM = int(MaxRPM)
+        
+            if key == ord('+'):
+                # update RPM value
+                RPM = int(RPM + 500)
+                if RPM > MaxRPM:
+                    RPM = MaxRPM
+            
+            if key == ord('-'):
+                # update RPM value
+                RPM = int(RPM - 500)
+                if RPM < MinRPM:
+                    RPM = MinRPM
+            # Update the tachometer RPM value
+            tachometer.set_RPM(RPM)
+        
+            cv2.imshow(imagename, imagecontainer)
+        
         cv2.destroyAllWindows()
